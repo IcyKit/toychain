@@ -36,6 +36,7 @@ func main() {
 	hash, err := ComputeHash(blocks[0])
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 	blocks[0].Hash = hash
 	for _, t := range tx {
@@ -44,11 +45,20 @@ func main() {
 			continue
 		}
 		fmt.Printf("Успешный перевод %v -> %v, сумма: %d\n", t.From, t.To, t.Amount)
-		blocks = append(blocks, Block{
+		lastBlock := blocks[len(blocks)-1]
+		newBlock := Block{
 			Transactions: []Transaction{
 				t,
 			},
-		})
+			PrevHash: lastBlock.Hash,
+		}
+		hash, err := ComputeHash(newBlock)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		newBlock.Hash = hash
+		blocks = append(blocks, newBlock)
 	}
 	fmt.Println(blocks[0].Hash)
 	fmt.Println(blocks[0].InitialBalance)
