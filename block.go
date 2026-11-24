@@ -58,5 +58,12 @@ func Verify(blocks []Block, expectedInitialBalances map[string]uint64) (*Ledger,
 		Balance: maps.Clone(blocks[0].InitialBalance),
 		mx:      sync.Mutex{},
 	}
+	for _, block := range blocks {
+		for _, tx := range block.Transactions {
+			if err := ledger.Apply(tx); err != nil {
+				return nil, err
+			}
+		}
+	}
 	return &ledger, nil
 }
