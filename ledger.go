@@ -6,9 +6,10 @@ import (
 )
 
 type Transaction struct {
-	From   string
-	To     string
-	Amount uint64
+	From      string
+	To        string
+	Amount    uint64
+	Signature []byte `json:",omitempty"`
 }
 
 type Ledger struct {

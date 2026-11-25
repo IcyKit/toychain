@@ -1,12 +1,31 @@
 package main
 
 import (
+	"crypto/ed25519"
 	"errors"
 	"fmt"
 	"os"
 )
 
 func main() {
+	publicKey, privateKey, err := ed25519.GenerateKey(nil)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	transaction := Transaction{
+		From:   "alice",
+		To:     "bob",
+		Amount: 3,
+	}
+	bytes, err := signingBytes(transaction)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	transaction.Signature = ed25519.Sign(privateKey, bytes)
+	verifiedSign := ed25519.Verify(publicKey, bytes, transaction.Signature)
+	fmt.Println(verifiedSign)
 	blocks, err := LoadBlocks("chain.json")
 	if err != nil {
 		if !errors.Is(err, os.ErrNotExist) {
