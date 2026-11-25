@@ -1,21 +1,49 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-	"maps"
-	"sync"
+	"os"
 )
 
-var lg Ledger = Ledger{
-	Balance: map[string]uint64{
-		"alice": 5,
-		"bob":   0,
-		"katya": 0,
-	},
-	mx: sync.Mutex{},
-}
-
 func main() {
+	blocks, err := LoadBlocks("chain.json")
+	if err != nil {
+		if !errors.Is(err, os.ErrNotExist) {
+			fmt.Println(err)
+			return
+		}
+	} else {
+		lg, err := Verify(blocks, map[string]uint64{
+			"alice": 5,
+			"bob":   0,
+			"katya": 0,
+		})
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(lg.Balance)
+		return
+	}
+	lg := Ledger{
+		Balance: map[string]uint64{
+			"alice": 5,
+			"bob":   0,
+			"katya": 0,
+		},
+	}
+
+	blocks = []Block{
+		{
+			InitialBalance: map[string]uint64{
+				"alice": 5,
+				"bob":   0,
+				"katya": 0,
+			},
+		},
+	}
+
 	tx := []Transaction{
 		{
 			From:   "alice",
@@ -26,11 +54,6 @@ func main() {
 			From:   "bob",
 			To:     "katya",
 			Amount: 1,
-		},
-	}
-	blocks := []Block{
-		{
-			InitialBalance: maps.Clone(lg.Balance),
 		},
 	}
 	hash, err := ComputeHash(blocks[0])
@@ -60,8 +83,10 @@ func main() {
 		newBlock.Hash = hash
 		blocks = append(blocks, newBlock)
 	}
-	fmt.Println(blocks[0].Hash)
-	fmt.Println(blocks[0].InitialBalance)
-	fmt.Println(blocks)
-	fmt.Println(lg.Balance)
+
+	err = SaveBlocks("chain.json", blocks)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 }
